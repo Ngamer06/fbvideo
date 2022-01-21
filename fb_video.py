@@ -43,8 +43,6 @@ def parse_video(link_post):
     title = soup.find('meta', property = 'og:description')['content']
     block = soup.find('div', class_ = 'bz')
     url = requests.utils.unquote(block.find('a')['href'])
-    # print(url[21:])
-    # print(title[:45].replace('\n', ' ').strip())
     filename = title[:45].replace('\n', ' ').strip()
     with open(filename, "wb") as file:
         logging.info("Download started!")
