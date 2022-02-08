@@ -47,7 +47,6 @@ def parse_video(link_post):
     with open(filename, "wb") as file:
         logging.info("Download started!")
         response = requests.get(url[21:])
-        soup = BeautifulSoup(response.content, "html.parser")
         file.write(response.content)
         logging.info("Download success!")
         file.close
