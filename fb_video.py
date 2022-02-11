@@ -16,6 +16,9 @@ PROXY_USER = configParser.get('proxy', 'user')
 PROXY_PASS = configParser.get('proxy', 'password')
 PROXY_HOST = configParser.get('proxy', 'host')
 PROXY_PORT = configParser.get('proxy', 'port')
+MINIO_HOST = configParser.get('minio', 'host')
+MINIO_USER = configParser.get('minio', 'user')
+MINIO_PASS = configParser.get('minio', 'pass')
 
 HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -36,7 +39,7 @@ with requests.Session() as session:
 logging.basicConfig(format = u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s \
                      [%(asctime)s]  %(message)s', level = logging.INFO)
 
-def parse_video(link_post):
+def parse_video(link_post:str) -> str:
     '''The function parses the link to the video from the post and downloads this video'''
     page = session.get(link_post)
     soup = BeautifulSoup(page.content, "html.parser")
@@ -50,9 +53,24 @@ def parse_video(link_post):
         file.write(response.content)
         logging.info("Download success!")
         file.close
+    return filename
 
+def download_c3(name_bucket: str, title:str, path:str):
+    s3_client = Minio(MINIO_HOST, MINIO_USER, MINIO_PASS, secure=False)
+    found = s3_client.bucket_exists(name_bucket)
+    if not found:
+        s3_client.make_bucket(name_bucket)
+        logging.info("Bucket '%s' create", name_bucket)
+    else:
+        logging.info("Bucket '%s' already exists", name_bucket)
+    s3_client.fput_object( name_bucket, title, path)
+    logging.info("File '%s' downloaded in bucket '%s'", title, name_bucket)
+    os.remove(path)
 
 if __name__ == "__main__":
     logging.info("Parser started!")
-    link_post = 'https://mbasic.facebook.com/groups/122547678361237/posts/995844574364872/?refsrc=deprecated&ref=104&_rdr'
-    parse_video(link_post)
+    link_post = 'https://www.facebook.com/fuzzywallzrecordings/posts/10166163684015413'
+    title =str(parse_video(link_post)
+    path = str(os. getcwd()) + '/' + title
+    name_bucket = 'fbvideo'
+    download_c3(name_bucket, title, path)
